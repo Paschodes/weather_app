@@ -25,6 +25,7 @@ const Container = () => {
                     console.log()
                 }
             };
+            
             getData();
         }, [])
     }
