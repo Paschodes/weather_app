@@ -1,10 +1,34 @@
 import React, { useEffect, useState } from 'react'
+import axios from "axios"
 import haze from "../assets/haze.jpg"
+import errorImage from "../assets/errorImage.jpg"
 
-//const apiKey = d07100db02f6146ec3c58678e2c66765
+const APIKEY = "d07100db02f6146ec3c58678e2c66765"
 
 const Container = () => {
     const [input, setInput] = useState('')
+
+    const [loading, setLoading] = useState(true)
+    const [data, setData] = useState(null)
+    const [error, setError] = useState(null)
+
+
+    useEffect(() => {
+        const getData = async () => {
+            try {
+                const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=Lagos&appid=${APIKEY}`)
+                setData(response.data)
+                setError(null)
+            } catch(error) {
+                setError(error.message)
+                setData(null)
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        getData();
+    }, [])
 
     function handleChange(event) {
         const change = event.target.value
@@ -14,20 +38,9 @@ const Container = () => {
 
     function handleSubmit() {
         console.log("submitted")
+        setLoading(true)
 
-        useEffect(() => {
-            const getData = async () => {
-                try {
-                    const response = await axios.get("https://api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}")
-                } catch(error) {
-                    console.log(error)
-                } finally {
-                    console.log()
-                }
-            };
-            
-            getData();
-        }, [])
+        
     }
   return (
     <div className='container'>
@@ -36,16 +49,33 @@ const Container = () => {
             <button onClick={handleSubmit}>Search</button>
         </div>
 
-        <div className='temp-img'>
-            <img src={haze} alt="" />
-            <h2>Temperature: <span>282 0c</span></h2>
-            <h2>cloud type: <span>Haze</span></h2>
-        </div>
+        {loading && <p>Please hold, we are locating your city...</p>}
 
-        <div className='Humi-wind'>
-            <h2>Humidity: <span>56%</span></h2>
-            <h2>Wind Speed: <span>7km/h</span></h2>
+        {error && <div>
+            <img src={errorImage} alt="error" />
+            <p>{`There is a problem fetching the weather: ${error}`}</p>
+            </div>}
+
+        <div>
+        {data && data.map((item) => (
+            <div>
+                <div className='temp-img'>
+                    <img src={haze} alt="haze" />
+                    <h2>Temperature: <span>{item.main.temperature}</span></h2>
+                    <h2>Description: <span>{item.weather[0].description}</span></h2>
+                </div>
+
+                <div className='Humi-wind'>
+                    <h2>Humidity: <span>{item.main.humidity}</span></h2>
+                    <h2>Wind Speed: <span>{item.wind.speech}</span></h2>
+                </div>
+            </div>
+            
+        ))
+        }
         </div>
+        
+        
     </div>
   )
 }
